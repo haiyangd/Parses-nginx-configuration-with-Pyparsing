@@ -1,7 +1,7 @@
 from pyparsing import *
 
 
-def parse(source):
+class NginxParser(object):
     """
     Parses nginx configuration from string
     """
@@ -14,19 +14,30 @@ def parse(source):
     value = CharsNotIn("{};,")
 
     # rules
-    assignment = Group(key
-                       + space
-                       + value
-                       + semicolon)
+    assignment = (key
+                  + space
+                  + value
+                  + semicolon)
 
     block = Forward()
 
     block << Group(
         Group(key + Optional(space + value))
         + left_bracket
-        + Group(ZeroOrMore(assignment | block))
+        + Group(ZeroOrMore(Group(assignment) | block))
         + right_bracket)
 
     script = OneOrMore(block)
 
-    return script.parseString(source).asList()
+    def __init__(self, source):
+        self.source = source
+
+    def parse(self):
+        return self.script.parseString(self.source)
+
+    def as_list(self):
+        return self.parse().asList()
+
+
+def parse(source):
+    return NginxParser(source).as_list()
