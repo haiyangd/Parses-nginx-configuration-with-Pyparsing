@@ -1,16 +1,15 @@
-import unittest
 import operator
+import unittest
 
-from nginxparser.parser import NginxParser
+from mockio import mockio
+
+from nginxparser.parser import NginxParser, load
 
 
 first = operator.itemgetter(0)
 
 
 class TestNginxParser(unittest.TestCase):
-    def setUp(self):
-        pass
-
     def test_assignments(self):
         parsed = NginxParser.assignment.parseString('root /test;').asList()
         self.assertEqual(parsed, ['root', '/test'])
@@ -30,6 +29,26 @@ class TestNginxParser(unittest.TestCase):
         parsed = NginxParser.block.parseString('foo { bar {} }').asList()
         block, content = first(parsed)
         self.assertEqual(first(content), [['bar'], []])
+
+
+class TestNginxParserWithIO(unittest.TestCase):
+    files = {
+        "/etc/nginx/sites-enabled/foo.conf": '''
+        server {
+            listen   80;
+            server_name foo.com;
+            root /home/ubuntu/sites/foo/;
+        }'''
+    }
+
+    @mockio(files)
+    def test_parse_from_file(self):
+        parsed = load(open("/etc/nginx/sites-enabled/foo.conf"))
+        self.assertEqual(parsed, [
+            [['server'], [
+                ['listen', '80'],
+                ['server_name', 'foo.com'],
+                ['root', '/home/ubuntu/sites/foo/']]]])
 
 
 if __name__ == '__main__':
