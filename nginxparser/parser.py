@@ -39,5 +39,9 @@ class NginxParser(object):
         return self.parse().asList()
 
 
-def parse(source):
+def loads(source):
     return NginxParser(source).as_list()
+
+
+def load(_file):
+    return loads(_file.read())
