@@ -1,11 +1,26 @@
 ### Nginx Configuration Parser
 
-Example:
+An nginx configuration parser that uses Pyparsing.
 
-    from nginxparser import load
-    print open("/nginx/sites-enabled/foo.conf")
+Parsing:
+
+    >>> load(open("/etc/nginx/sites-enabled/foo.conf"))
+
+     [['server'], [
+        ['listen', '80'],
+        ['server_name', 'foo.com'],
+        ['root', '/home/ubuntu/sites/foo/']]]]
 
 
-### Work in progress
+Dumping:
 
- - Dump and dumps methods will be available soon.
+    >>> dumps([['server'], [
+                ['listen', '80'],
+                ['server_name', 'foo.com'],
+                ['root', '/home/ubuntu/sites/foo/']]])
+
+    'server {
+        listen   80;
+        server_name foo.com;
+        root /home/ubuntu/sites/foo/;
+     }'
