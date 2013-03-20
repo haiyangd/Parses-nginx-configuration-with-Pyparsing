@@ -3,13 +3,22 @@ import unittest
 
 from mockio import mockio
 
-from nginxparser.parser import NginxParser, load
+from nginxparser.parser import NginxParser, load, loads, dumps
 
 
 first = operator.itemgetter(0)
 
 
 class TestNginxParser(unittest.TestCase):
+    files = {
+        "/etc/nginx/sites-enabled/foo.conf": '''
+        server {
+            listen   80;
+            server_name foo.com;
+            root /home/ubuntu/sites/foo/;
+        }'''
+    }
+
     def test_assignments(self):
         parsed = NginxParser.assignment.parseString('root /test;').asList()
         self.assertEqual(parsed, ['root', '/test'])
@@ -30,16 +39,18 @@ class TestNginxParser(unittest.TestCase):
         block, content = first(parsed)
         self.assertEqual(first(content), [['bar'], []])
 
+    def test_dump_as_string(self):
+        dumped = dumps([
+            [['server'], [
+                ['listen', '80'],
+                ['server_name', 'foo.com'],
+                ['root', '/home/ubuntu/sites/foo/']]]])
 
-class TestNginxParserWithIO(unittest.TestCase):
-    files = {
-        "/etc/nginx/sites-enabled/foo.conf": '''
-        server {
-            listen   80;
-            server_name foo.com;
-            root /home/ubuntu/sites/foo/;
-        }'''
-    }
+        self.assertEqual(dumped, 'server {\n'
+                                 '    listen 80;\n'
+                                 '    server_name foo.com;\n'
+                                 '    root /home/ubuntu/sites/foo/;\n'
+                                 '}')
 
     @mockio(files)
     def test_parse_from_file(self):
