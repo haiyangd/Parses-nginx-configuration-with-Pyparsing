@@ -28,7 +28,7 @@ class NginxParser(object):
         + Group(ZeroOrMore(Group(assignment) | block))
         + right_bracket)
 
-    script = OneOrMore(block)
+    script = OneOrMore(block).ignore(pythonStyleComment)
 
     def __init__(self, source):
         self.source = source
