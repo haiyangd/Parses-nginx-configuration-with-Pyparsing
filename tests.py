@@ -20,6 +20,9 @@ class TestNginxParser(unittest.TestCase):
 
             location /status {
                 check_status;
+                types {
+                    image/jpeg jpg;
+                }
             }
         }'''
     }
@@ -52,7 +55,8 @@ class TestNginxParser(unittest.TestCase):
                 ['server_name', 'foo.com'],
                 ['root', '/home/ubuntu/sites/foo/'],
                 [['location','/status'], [
-                    ['check_status']
+                    ['check_status'],
+                    [['types'], [['image/jpeg','jpg']]],
                 ]]
             ]]])
 
@@ -62,7 +66,10 @@ class TestNginxParser(unittest.TestCase):
                                 '    server_name foo.com;\n' +
                                 '    root /home/ubuntu/sites/foo/;\n \n' +
                                 '    location /status {\n' +
-                                '        check_status;\n' +
+                                '        check_status;\n \n' +
+                                '        types {\n' +
+                                '            image/jpeg jpg;\n' +
+                                '        }\n' +
                                 '    }\n' +
                                 '}')
 
@@ -76,7 +83,8 @@ class TestNginxParser(unittest.TestCase):
                     ['server_name', 'foo.com'],
                     ['root', '/home/ubuntu/sites/foo/'],
                     [['location','/status'], [
-                        ['check_status']
+                        ['check_status'],
+                        [['types'], [['image/jpeg','jpg']]],
                     ]]
             ]],
             ])
