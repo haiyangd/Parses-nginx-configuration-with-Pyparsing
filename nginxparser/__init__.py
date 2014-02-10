@@ -1,4 +1,4 @@
-from pyparsing import *
+from pyparsing import Literal, White, Word, alphanums, CharsNotIn, Forward, Group, Optional, OneOrMore, ZeroOrMore, pythonStyleComment
 
 
 class NginxParser(object):
@@ -11,24 +11,21 @@ class NginxParser(object):
     right_bracket = Literal("}").suppress()
     semicolon = Literal(";").suppress()
     space = White().suppress()
-    key = Word(alphanums + "_")
+    key = Word(alphanums + "_/")
     value = CharsNotIn("{};,")
+    location = CharsNotIn("{};,     ")
 
     # rules
-    assignment = (key
-                  + space
-                  + value
-                  + semicolon)
-
+    assignment = (key + Optional(space + value) + semicolon)
     block = Forward()
 
     block << Group(
-        Group(key + Optional(space + value))
+        Group(key + Optional(space + location))
         + left_bracket
         + Group(ZeroOrMore(Group(assignment) | block))
         + right_bracket)
 
-    script = OneOrMore(block).ignore(pythonStyleComment)
+    script = OneOrMore(Group(assignment) | block).ignore(pythonStyleComment)
 
     def __init__(self, source):
         self.source = source
@@ -44,7 +41,6 @@ class NginxParser(object):
         Returns the list of tree.
         """
         return self.parse().asList()
-
 
 class NginxDumper(object):
     """
@@ -63,18 +59,21 @@ class NginxDumper(object):
             if current_indent:
                 yield spacer
             indentation = spacer * current_indent
-            yield indentation + spacer.join(key) + ' {'
-            for parameter in values:
-                if isinstance(parameter[0], list):
-                    dumped = self.__iter__([parameter],
-                                           current_indent + self.indentation)
-                    for line in dumped:
-                        yield line
-                else:
-                    dumped = spacer.join(parameter) + ";"
-                    yield spacer * (current_indent + self.indentation) + dumped
+            if isinstance(key, list):
+                yield indentation + spacer.join(key) + ' {'
+                for parameter in values:
+                    if isinstance(parameter[0], list):
+                        dumped = self.__iter__([parameter],
+                                               current_indent + self.indentation)
+                        for line in dumped:
+                            yield line
+                    else:
+                        dumped = spacer.join(parameter) + ';'
+                        yield spacer * (current_indent + self.indentation) + dumped
 
-            yield indentation + '}'
+                yield indentation + '}'
+            else:
+                yield spacer * current_indent + key +spacer + values + ';'
 
     def as_string(self):
         return '\n'.join(self)

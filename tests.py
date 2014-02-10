@@ -12,10 +12,18 @@ first = operator.itemgetter(0)
 class TestNginxParser(unittest.TestCase):
     files = {
         "/etc/nginx/sites-enabled/foo.conf": '''
+        user www-data;
         server {
             listen   80;
             server_name foo.com;
             root /home/ubuntu/sites/foo/;
+
+            location /status {
+                check_status;
+                types {
+                    image/jpeg jpg;
+                }
+            }
         }'''
     }
 
@@ -41,25 +49,45 @@ class TestNginxParser(unittest.TestCase):
 
     def test_dump_as_string(self):
         dumped = dumps([
+            ['user', 'www-data'],
             [['server'], [
                 ['listen', '80'],
                 ['server_name', 'foo.com'],
-                ['root', '/home/ubuntu/sites/foo/']]]])
+                ['root', '/home/ubuntu/sites/foo/'],
+                [['location','/status'], [
+                    ['check_status'],
+                    [['types'], [['image/jpeg','jpg']]],
+                ]]
+            ]]])
 
-        self.assertEqual(dumped, 'server {\n'
-                                 '    listen 80;\n'
-                                 '    server_name foo.com;\n'
-                                 '    root /home/ubuntu/sites/foo/;\n'
-                                 '}')
+        self.assertEqual(dumped,'user www-data;\n' +
+                                'server {\n' +
+                                '    listen 80;\n' +
+                                '    server_name foo.com;\n' +
+                                '    root /home/ubuntu/sites/foo/;\n \n' +
+                                '    location /status {\n' +
+                                '        check_status;\n \n' +
+                                '        types {\n' +
+                                '            image/jpeg jpg;\n' +
+                                '        }\n' +
+                                '    }\n' +
+                                '}')
 
     @mockio(files)
     def test_parse_from_file(self):
         parsed = load(open("/etc/nginx/sites-enabled/foo.conf"))
         self.assertEqual(parsed, [
+            ['user', 'www-data'],
             [['server'], [
-                ['listen', '80'],
-                ['server_name', 'foo.com'],
-                ['root', '/home/ubuntu/sites/foo/']]]])
+                    ['listen', '80'],
+                    ['server_name', 'foo.com'],
+                    ['root', '/home/ubuntu/sites/foo/'],
+                    [['location','/status'], [
+                        ['check_status'],
+                        [['types'], [['image/jpeg','jpg']]],
+                    ]]
+            ]],
+            ])
 
 
 if __name__ == '__main__':
