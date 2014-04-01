@@ -8,6 +8,6 @@ setup(name='Nginxparser',
       url='https://github.com/fatiherikli/nginxparser',
       packages=['nginxparser'],
       install_requires = [
-          'pyparsing==1.5.5'
+          'pyparsing>=1.5.5'
       ]
 )

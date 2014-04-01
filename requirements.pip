@@ -1,1 +1,1 @@
-pyparsing==1.5.5
+pyparsing>=1.5.5
