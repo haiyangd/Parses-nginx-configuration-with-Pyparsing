@@ -2,27 +2,30 @@
 
 An nginx configuration parser that uses Pyparsing.
 
-Parsing:
+You can parse a nginx configuration file with `load` or `loads` method:
 
-    >>> from nginxparser import load
-    >>> load(open("/etc/nginx/sites-enabled/foo.conf"))
+```python
+>>> from nginxparser import load
+>>> load(open("/etc/nginx/sites-enabled/foo.conf"))
 
-     [['server'], [
-        ['listen', '80'],
-        ['server_name', 'foo.com'],
-        ['root', '/home/ubuntu/sites/foo/']]]]
+ [['server'], [
+    ['listen', '80'],
+    ['server_name', 'foo.com'],
+    ['root', '/home/ubuntu/sites/foo/']]]]
+```
 
+Same as other serialization modules also you can export configuration with `dump` and `dumps` methods.
 
-Dumping:
+```python
+>>> from nginxparser import dumps
+>>> dumps([['server'], [
+            ['listen', '80'],
+            ['server_name', 'foo.com'],
+            ['root', '/home/ubuntu/sites/foo/']]])
 
-    >>> from nginxparser import dumps
-    >>> dumps([['server'], [
-                ['listen', '80'],
-                ['server_name', 'foo.com'],
-                ['root', '/home/ubuntu/sites/foo/']]])
-
-    'server {
-        listen   80;
-        server_name foo.com;
-        root /home/ubuntu/sites/foo/;
-     }'
+'server {
+    listen   80;
+    server_name foo.com;
+    root /home/ubuntu/sites/foo/;
+ }'
+```
