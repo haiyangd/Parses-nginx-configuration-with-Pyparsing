@@ -1,5 +1,5 @@
 from pyparsing import (
-    Literal, White, Word, alphanums, CharsNotIn, Forward, Group, 
+    Literal, White, Word, alphanums, CharsNotIn, Forward, Group,
     Optional, OneOrMore, ZeroOrMore, pythonStyleComment)
 
 
@@ -16,6 +16,8 @@ class NginxParser(object):
     key = Word(alphanums + "_/")
     value = CharsNotIn("{};,")
     location = CharsNotIn("{};,     ")
+    # modifier for location uri [ = | ~ | ~* | ^~ ]
+    modifier = Literal("=") | Literal("~*") | Literal("~") | Literal("^~")
 
     # rules
     assignment = (key + Optional(space + value) + semicolon)
@@ -44,6 +46,7 @@ class NginxParser(object):
         """
         return self.parse().asList()
 
+
 class NginxDumper(object):
     """
     A class that dumps nginx configuration from the provided tree.
@@ -65,17 +68,19 @@ class NginxDumper(object):
                 yield indentation + spacer.join(key) + ' {'
                 for parameter in values:
                     if isinstance(parameter[0], list):
-                        dumped = self.__iter__([parameter],
-                                               current_indent + self.indentation)
+                        dumped = self.__iter__(
+                            [parameter],
+                            current_indent + self.indentation)
                         for line in dumped:
                             yield line
                     else:
                         dumped = spacer.join(parameter) + ';'
-                        yield spacer * (current_indent + self.indentation) + dumped
+                        yield spacer * (
+                            current_indent + self.indentation) + dumped
 
                 yield indentation + '}'
             else:
-                yield spacer * current_indent + key +spacer + values + ';'
+                yield spacer * current_indent + key + spacer + values + ';'
 
     def as_string(self):
         return '\n'.join(self)
