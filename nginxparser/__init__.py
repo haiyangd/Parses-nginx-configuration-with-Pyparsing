@@ -24,7 +24,7 @@ class NginxParser(object):
     block = Forward()
 
     block << Group(
-        Group(key + Optional(space + location))
+        Group(key + Optional(space + modifier) + Optional(space + location))
         + left_bracket
         + Group(ZeroOrMore(Group(assignment) | block))
         + right_bracket)
