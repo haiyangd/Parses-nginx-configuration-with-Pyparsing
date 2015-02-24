@@ -1,3 +1,5 @@
+import string
+
 from pyparsing import (
     Literal, White, Word, alphanums, CharsNotIn, Forward, Group, 
     Optional, OneOrMore, ZeroOrMore, pythonStyleComment)
@@ -15,7 +17,7 @@ class NginxParser(object):
     space = White().suppress()
     key = Word(alphanums + "_/")
     value = CharsNotIn("{};,")
-    location = CharsNotIn("{};,     ")
+    location = CharsNotIn("{};," + string.whitespace)
 
     # rules
     assignment = (key + Optional(space + value) + semicolon)
@@ -43,6 +45,7 @@ class NginxParser(object):
         Returns the list of tree.
         """
         return self.parse().asList()
+
 
 class NginxDumper(object):
     """
