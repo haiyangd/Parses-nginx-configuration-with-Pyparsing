@@ -3,7 +3,7 @@ import unittest
 
 from mockio import mockio
 
-from nginxparser import NginxParser, load, loads, dumps
+from nginxparser import NginxParser, load,  dumps
 
 
 first = operator.itemgetter(0)
@@ -24,6 +24,14 @@ class TestNginxParser(unittest.TestCase):
                     image/jpeg jpg;
                 }
             }
+
+            location ~ case_sensitive\.php$ {
+                hoge hoge;
+            }
+            location ~* case_insensitive\.php$ {}
+            location = exact_match\.php$ {}
+            location ^~ ignore_regex\.php$ {}
+
         }'''
     }
 
@@ -54,40 +62,46 @@ class TestNginxParser(unittest.TestCase):
                 ['listen', '80'],
                 ['server_name', 'foo.com'],
                 ['root', '/home/ubuntu/sites/foo/'],
-                [['location','/status'], [
+                [['location', '/status'], [
                     ['check_status'],
-                    [['types'], [['image/jpeg','jpg']]],
+                    [['types'], [['image/jpeg', 'jpg']]],
                 ]]
             ]]])
 
-        self.assertEqual(dumped,'user www-data;\n' +
-                                'server {\n' +
-                                '    listen 80;\n' +
-                                '    server_name foo.com;\n' +
-                                '    root /home/ubuntu/sites/foo/;\n \n' +
-                                '    location /status {\n' +
-                                '        check_status;\n \n' +
-                                '        types {\n' +
-                                '            image/jpeg jpg;\n' +
-                                '        }\n' +
-                                '    }\n' +
-                                '}')
+        self.assertEqual(dumped,
+                         'user www-data;\n' +
+                         'server {\n' +
+                         '    listen 80;\n' +
+                         '    server_name foo.com;\n' +
+                         '    root /home/ubuntu/sites/foo/;\n \n' +
+                         '    location /status {\n' +
+                         '        check_status;\n \n' +
+                         '        types {\n' +
+                         '            image/jpeg jpg;\n' +
+                         '        }\n' +
+                         '    }\n' +
+                         '}')
 
     @mockio(files)
     def test_parse_from_file(self):
         parsed = load(open("/etc/nginx/sites-enabled/foo.conf"))
-        self.assertEqual(parsed, [
-            ['user', 'www-data'],
+        self.assertEqual(
+            parsed,
+            [['user', 'www-data']],
             [['server'], [
-                    ['listen', '80'],
-                    ['server_name', 'foo.com'],
-                    ['root', '/home/ubuntu/sites/foo/'],
-                    [['location','/status'], [
-                        ['check_status'],
-                        [['types'], [['image/jpeg','jpg']]],
-                    ]]
+                ['listen', '80'],
+                ['server_name', 'foo.com'],
+                ['root', '/home/ubuntu/sites/foo/'],
+                [['location', '/status'], [
+                    ['check_status'],
+                    [['types'], [['image/jpeg', 'jpg']]],
+                ]],
+                [['location', '~', 'case_sensitive\.php$']],
+                [['location', '~*', 'case_insensitive\.php$']],
+                [['location', '=', 'exact_match\.php$']],
+                [['location', '^~', 'ignore_regex\.php$']],
             ]],
-            ])
+        )
 
 
 if __name__ == '__main__':
