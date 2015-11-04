@@ -1,8 +1,8 @@
 import string
 
 from pyparsing import (
-    Literal, White, Word, alphanums, CharsNotIn, Forward, Group,
-    Optional, OneOrMore, ZeroOrMore, pythonStyleComment)
+    Literal, White, Word, alphanums, CharsNotIn, Forward, Group, SkipTo,
+    LineEnd, Optional, OneOrMore, ZeroOrMore, pythonStyleComment)
 
 
 class NginxParser(object):
@@ -17,18 +17,30 @@ class NginxParser(object):
     space = White().suppress()
     key = Word(alphanums + "_/")
     value = CharsNotIn("{};,")
+    value2 = CharsNotIn(";")
     location = CharsNotIn("{};," + string.whitespace)
+    ifword = Literal("if")
+    setword = Literal("set")
     # modifier for location uri [ = | ~ | ~* | ^~ ]
     modifier = Literal("=") | Literal("~*") | Literal("~") | Literal("^~")
 
     # rules
     assignment = (key + Optional(space + value) + semicolon)
+    setblock = (setword + OneOrMore(space + value2) + semicolon)
     block = Forward()
+    ifblock = Forward()
+    subblock = ZeroOrMore(Group(assignment) | block | ifblock | setblock)
+    ifblock = (
+        ifword
+        + SkipTo('{')
+        + left_bracket
+        + subblock
+        + right_bracket)
 
     block << Group(
         Group(key + Optional(space + modifier) + Optional(space + location))
         + left_bracket
-        + Group(ZeroOrMore(Group(assignment) | block))
+        + Group(ZeroOrMore(Group(assignment) | block | ifblock | setblock))
         + right_bracket)
 
     script = OneOrMore(Group(assignment) | block).ignore(pythonStyleComment)
