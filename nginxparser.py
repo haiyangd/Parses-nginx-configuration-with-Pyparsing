@@ -101,7 +101,7 @@ class NginxDumper(object):
 
     def to_file(self, out):
         for line in self:
-            out.write(line)
+            out.write(line+"\n")
         out.close()
         return out
 
