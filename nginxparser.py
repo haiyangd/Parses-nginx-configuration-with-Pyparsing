@@ -2,7 +2,7 @@ import string
 
 from pyparsing import (
     Literal, White, Word, alphanums, CharsNotIn, Forward, Group, SkipTo,
-    LineEnd, Optional, OneOrMore, ZeroOrMore, pythonStyleComment)
+    Optional, OneOrMore, ZeroOrMore, pythonStyleComment)
 
 
 class NginxParser(object):
@@ -16,7 +16,7 @@ class NginxParser(object):
     semicolon = Literal(";").suppress()
     space = White().suppress()
     key = Word(alphanums + "_/")
-    value = CharsNotIn("{};,")
+    value = CharsNotIn("{};")
     value2 = CharsNotIn(";")
     location = CharsNotIn("{};," + string.whitespace)
     ifword = Literal("if")
@@ -29,19 +29,25 @@ class NginxParser(object):
     setblock = (setword + OneOrMore(space + value2) + semicolon)
     block = Forward()
     ifblock = Forward()
-    subblock = ZeroOrMore(Group(assignment) | block | ifblock | setblock)
-    ifblock = (
+    subblock = Forward()
+
+    ifblock << (
         ifword
         + SkipTo('{')
         + left_bracket
         + subblock
         + right_bracket)
 
+    subblock << ZeroOrMore(
+        Group(assignment) | block | ifblock | setblock
+    )
+
     block << Group(
         Group(key + Optional(space + modifier) + Optional(space + location))
         + left_bracket
-        + Group(ZeroOrMore(Group(assignment) | block | ifblock | setblock))
-        + right_bracket)
+        + Group(subblock)
+        + right_bracket
+    )
 
     script = OneOrMore(Group(assignment) | block).ignore(pythonStyleComment)
 
